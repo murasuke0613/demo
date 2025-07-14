@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>ホーム</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        }
+        .navbar {
+            backdrop-filter: blur(6px);
+            background-color: rgba(13, 110, 253, 0.85);
+        }
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            padding: 0.8rem 1rem;
+            min-height: 120px; /* ← 高さを縮小 */
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.4rem 0.8rem rgba(0, 0, 0, 0.15);
+        }
+        .card-title {
+            font-size: 1.2rem; /* タイトルを少し小さめ */
+            margin-bottom: 0.3rem;
+        }
+        .card-text {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .user-info {
+            color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== ナビバー ===== -->
+<nav class="navbar navbar-expand-lg navbar-dark shadow">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" th:href="@{/home}">
+      <i class="bi bi-house-door-fill"></i> Home
+    </a>
+    <div class="ms-auto user-info">
+      <span><i class="bi bi-person-circle"></i> <strong th:text="${loginUser.userName}">ユーザー名</strong></span>
+      <span class="ms-3">ID: <span th:text="${loginUser.userId}">12345</span></span>
+      <a th:href="@{/logout}" class="btn btn-sm btn-outline-light ms-3">
+        <i class="bi bi-box-arrow-right"></i> ログアウト
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== メインコンテンツ ===== -->
+<main class="container py-4">
+    <div class="row g-3">
+        <!-- 最新情報ブロック -->
+        <div class="col-md-4">
+            <a th:href="@{/latestPosts}" class="text-decoration-none text-dark">
+                <div class="card text-center shadow-sm border-0 rounded-3">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-clock-history"></i> 業務連絡</h5>
+                        <p class="card-text">各部署からの業務連絡の最新投稿を一覧表示します。</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 管理者専用ブロック -->
+        <div th:if="${loginUser.adminFlag}" class="col-md-4">
+            <a th:href="@{/user/register}" class="text-decoration-none text-dark">
+                <div class="card text-center shadow-sm border-0 rounded-3">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-person-plus-fill"></i> ユーザー登録</h5>
+                        <p class="card-text">新規ユーザーを追加できます。</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div th:if="${loginUser.adminFlag}" class="col-md-4">
+            <a th:href="@{/departmentJob/register}" class="text-decoration-none text-dark">
+                <div class="card text-center shadow-sm border-0 rounded-3">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-building-fill"></i> 職種・部署登録</h5>
+                        <p class="card-text">職種や部署を追加・編集できます。</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 🆕 管理者削除ページブロック -->
+        <div th:if="${loginUser.adminFlag}" class="col-md-4">
+            <a th:href="@{/admin/delete}" class="text-decoration-none text-dark">
+                <div class="card text-center shadow-sm border-0 rounded-3">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-trash-fill"></i> ユーザー削除</h5>
+                        <p class="card-text">ユーザー・部署・職種の削除を管理します。</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

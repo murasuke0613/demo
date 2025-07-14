@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>部署・職種登録</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+	
+	<!-- 共通ヘッダー（初回登録時は表示しない） -->
+	<th:block th:if="${!isInitialRegistration}" th:replace="fragments/header :: header"></th:block>
+
+	
+<div class="container py-5">
+
+    <!-- ✅ 完了メッセージ表示 -->
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+
+    <!-- ✅ 団体情報カード -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-info text-white">団体情報</div>
+        <div class="card-body">
+            <h5 class="mb-3" th:text="${organization.organizationName}">団体名</h5>
+
+            <!-- ✅ 登録済み部署一覧 -->
+            <h6 class="text-muted">登録済み部署:</h6>
+            <ul class="list-group mb-3">
+                <li th:each="dept : ${departmentList}" class="list-group-item p-1" th:text="${dept.departmentName}">部署名</li>
+                <li th:if="${#lists.isEmpty(departmentList)}" class="list-group-item p-1 text-muted">まだ登録されていません</li>
+            </ul>
+
+            <!-- ✅ 登録済み職種一覧 -->
+            <h6 class="text-muted">登録済み職種:</h6>
+            <ul class="list-group">
+                <li th:each="job : ${jobList}" class="list-group-item p-1" th:text="${job.jobName}">職種名</li>
+                <li th:if="${#lists.isEmpty(jobList)}" class="list-group-item p-1 text-muted">まだ登録されていません</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ✅ 部署・職種登録フォーム -->
+    <form th:action="@{/departmentJob/register}" method="post" id="departmentJobForm">
+
+        <!-- ✅ 部署登録エリア -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span>部署登録</span>
+                <button type="button" class="btn btn-light btn-sm text-primary fw-bold" onclick="showConfirmDepartmentModal()">✔ 部署だけ登録</button>
+            </div>
+            <div class="card-body">
+                <div id="departmentRows">
+                    <div class="input-group mb-2">
+                        <input type="text" name="departmentName" class="form-control" placeholder="部署名を入力">
+                        <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeRow(this)">×</button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="addDepartmentRow()">＋ 部署追加</button>
+            </div>
+        </div>
+
+        <!-- ✅ 職種登録エリア -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <span>職種登録</span>
+                <button type="button" class="btn btn-light btn-sm text-success fw-bold" onclick="showConfirmJobModal()">✔ 職種だけ登録</button>
+            </div>
+            <div class="card-body">
+                <div id="jobRows">
+                    <div class="input-group mb-2">
+                        <input type="text" name="jobName" class="form-control" placeholder="職種名を入力">
+                        <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeRow(this)">×</button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="addJobRow()">＋ 職種追加</button>
+            </div>
+        </div>
+
+        <!-- ✅ 一括登録ボタン -->
+        <div class="text-center">
+            <button type="button" class="btn btn-lg btn-primary w-50 shadow" onclick="showConfirmBulkModal()">✨ 一括登録 ✨</button>
+        </div>
+    </form>
+
+	<!-- ✅ 初回登録時のみ表示 -->
+	<div th:if="${isInitialRegistration}" class="mt-4 text-center">
+	    <button type="button" class="btn btn-outline-success w-50" onclick="showAdminConfirmModal()">
+	        管理者登録に進む
+	    </button>
+	</div>
+
+	<!-- ✅ 通常ログイン時のみ表示 -->
+	<div th:if="${!isInitialRegistration}" class="mt-4 text-center">
+	    <a th:href="@{/user/register}" class="btn btn-outline-primary w-50 mb-2">
+	        <i class="bi bi-person-plus-fill"></i> ユーザー登録に進む
+	    </a>
+	    <a th:href="@{/home}" class="btn btn-outline-secondary w-50">
+	        <i class="bi bi-house-fill"></i> ホームに戻る
+	    </a>
+	</div>
+
+
+    <!-- ✅ モーダル群 (CSRF削除済) -->
+    <div class="modal fade" id="confirmDepartmentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">部署登録確認</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>以下の部署を登録しますか？</p>
+                    <ul id="confirmDepartments" class="list-group mb-3"></ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <form th:action="@{/departmentJob/register}" method="post">
+                        <input type="hidden" name="action" value="confirmSingleDepartment">
+                        <input type="hidden" name="departmentNames" id="hiddenDepartmentNames">
+                        <button type="submit" class="btn btn-primary">登録する</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 職種登録確認モーダル -->
+    <div class="modal fade" id="confirmJobModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">職種登録確認</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>以下の職種を登録しますか？</p>
+                    <ul id="confirmJobs" class="list-group mb-3"></ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <form th:action="@{/departmentJob/register}" method="post">
+                        <input type="hidden" name="action" value="confirmSingleJob">
+                        <input type="hidden" name="jobNames" id="hiddenJobNames">
+                        <button type="submit" class="btn btn-success">登録する</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 一括登録確認モーダル -->
+    <div class="modal fade" id="confirmBulkModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">一括登録確認</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>以下の内容で一括登録しますか？</p>
+                    <h6>部署一覧:</h6>
+                    <ul id="confirmBulkDepartments" class="list-group mb-3"></ul>
+                    <h6>職種一覧:</h6>
+                    <ul id="confirmBulkJobs" class="list-group"></ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <form th:action="@{/departmentJob/register}" method="post">
+                        <input type="hidden" name="action" value="bulk">
+                        <input type="hidden" name="departmentNames" id="hiddenBulkDepartmentNames">
+                        <input type="hidden" name="jobNames" id="hiddenBulkJobNames">
+                        <button type="submit" class="btn btn-primary">登録する</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理者登録確認モーダル -->
+    <div class="modal fade" id="adminConfirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">確認メッセージ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>管理者登録画面へ進みます。よろしいですか？</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <form th:action="@{/user/register}" method="get">
+                        <button type="submit" class="btn btn-success">進む</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ✅ JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+    function addDepartmentRow() {
+        const departmentRows = document.getElementById('departmentRows');
+        const newRow = document.createElement('div');
+        newRow.className = 'input-group mb-2';
+        newRow.innerHTML = `
+            <input type="text" name="departmentName" class="form-control" placeholder="部署名を入力">
+            <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeRow(this)">×</button>
+        `;
+        departmentRows.appendChild(newRow);
+    }
+
+    function addJobRow() {
+        const jobRows = document.getElementById('jobRows');
+        const newRow = document.createElement('div');
+        newRow.className = 'input-group mb-2';
+        newRow.innerHTML = `
+            <input type="text" name="jobName" class="form-control" placeholder="職種名を入力">
+            <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeRow(this)">×</button>
+        `;
+        jobRows.appendChild(newRow);
+    }
+
+    function removeRow(button) {
+        button.closest('.input-group').remove();
+    }
+
+    function showConfirmDepartmentModal() {
+        const deptInputs = document.querySelectorAll('input[name="departmentName"]');
+        const confirmList = document.getElementById('confirmDepartments');
+        const hiddenInput = document.getElementById('hiddenDepartmentNames');
+        confirmList.innerHTML = "";
+        let names = [];
+
+        deptInputs.forEach(input => {
+            if (input.value.trim()) {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = input.value.trim();
+                confirmList.appendChild(li);
+                names.push(input.value.trim());
+            }
+        });
+
+        if (names.length === 0) {
+            alert("部署名を1つ以上入力してください。");
+            return;
+        }
+
+        hiddenInput.value = names.join(",");
+        const modal = new bootstrap.Modal(document.getElementById('confirmDepartmentModal'));
+        modal.show();
+    }
+
+    function showConfirmJobModal() {
+        const jobInputs = document.querySelectorAll('input[name="jobName"]');
+        const confirmList = document.getElementById('confirmJobs');
+        const hiddenInput = document.getElementById('hiddenJobNames');
+        confirmList.innerHTML = "";
+        let names = [];
+
+        jobInputs.forEach(input => {
+            if (input.value.trim()) {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = input.value.trim();
+                confirmList.appendChild(li);
+                names.push(input.value.trim());
+            }
+        });
+
+        if (names.length === 0) {
+            alert("職種名を1つ以上入力してください。");
+            return;
+        }
+
+        hiddenInput.value = names.join(",");
+        const modal = new bootstrap.Modal(document.getElementById('confirmJobModal'));
+        modal.show();
+    }
+
+    function showConfirmBulkModal() {
+        const deptInputs = document.querySelectorAll('input[name="departmentName"]');
+        const jobInputs = document.querySelectorAll('input[name="jobName"]');
+        const confirmDeptList = document.getElementById('confirmBulkDepartments');
+        const confirmJobList = document.getElementById('confirmBulkJobs');
+        const hiddenDeptInput = document.getElementById('hiddenBulkDepartmentNames');
+        const hiddenJobInput = document.getElementById('hiddenBulkJobNames');
+
+        confirmDeptList.innerHTML = "";
+        confirmJobList.innerHTML = "";
+        let deptNames = [];
+        let jobNames = [];
+        let hasData = false;
+
+        deptInputs.forEach(input => {
+            if (input.value.trim()) {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = input.value.trim();
+                confirmDeptList.appendChild(li);
+                deptNames.push(input.value.trim());
+                hasData = true;
+            }
+        });
+
+        jobInputs.forEach(input => {
+            if (input.value.trim()) {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = input.value.trim();
+                confirmJobList.appendChild(li);
+                jobNames.push(input.value.trim());
+                hasData = true;
+            }
+        });
+
+        if (!hasData) {
+            alert("部署名または職種名を1つ以上入力してください。");
+            return;
+        }
+
+        hiddenDeptInput.value = deptNames.join(",");
+        hiddenJobInput.value = jobNames.join(",");
+
+        const modal = new bootstrap.Modal(document.getElementById('confirmBulkModal'));
+        modal.show();
+    }
+
+    function showAdminConfirmModal() {
+        const modal = new bootstrap.Modal(document.getElementById('adminConfirmModal'));
+        modal.show();
+    }
+</script>
+</body>
+</html>

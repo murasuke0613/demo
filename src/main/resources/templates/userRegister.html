@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>ユーザー登録</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+    <!-- 共通ヘッダー（初回登録時は表示しない） -->
+	<th:block th:if="${!isInitialRegistration}" 
+	          th:replace="~{fragments/header :: header}"></th:block>>
+
+    <div class="container py-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                📝 ユーザー登録
+            </div>
+            <div class="card-body">
+                <!-- エラーメッセージ -->
+                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+                <!-- ユーザー登録フォーム -->
+                <form th:action="@{/user/register}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">ユーザーID</label>
+                        <input type="text" name="userId" class="form-control"
+                               th:value="${userId}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ユーザー名</label>
+                        <input type="text" name="userName" class="form-control"
+                               th:value="${userName}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">部署</label>
+                        <select name="departmentId" class="form-select" required>
+                            <option value="" disabled selected>部署を選択</option>
+                            <option th:each="dept : ${departmentList}"
+                                    th:value="${dept.departmentId}"
+                                    th:text="${dept.departmentName}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">職種</label>
+                        <select name="jobId" class="form-select" required>
+                            <option value="" disabled selected>職種を選択</option>
+                            <option th:each="job : ${jobList}"
+                                    th:value="${job.jobId}"
+                                    th:text="${job.jobName}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">パスワード</label>
+                        <input type="password" name="password" class="form-control"
+                               th:value="${password}" required>
+                    </div>
+                    <div th:if="${isInitialRegistration}" class="mb-3">
+                        <input type="hidden" name="isAdmin" value="true">
+                    </div>
+                    <div th:if="${!isInitialRegistration}" class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="isAdmin" value="true"
+                               th:checked="${isAdmin}">
+                        <label class="form-check-label">このユーザーを管理者として登録する</label>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary w-50">登録</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 遷移元に応じた戻るボタン -->
+        <div class="text-center">
+            <a th:if="${fromPage == 'admin'}" th:href="@{/admin/dashboard}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> 管理者ダッシュボードに戻る
+            </a>
+            <a th:if="${fromPage == 'home'}" th:href="@{/home}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> ホームに戻る
+            </a>
+        </div>
+    </div>
+
+    <!-- ✅ 登録完了モーダル -->
+    <div class="modal fade" id="registerCompleteModal" tabindex="-1" aria-labelledby="registerCompleteModalLabel" aria-hidden="true"
+         th:if="${registerComplete}">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="registerCompleteModalLabel">登録完了</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                </div>
+                <div class="modal-body">
+                    ✅ ユーザー登録が完了しました。<br><br>
+                    続けてユーザーを登録しますか？
+                </div>
+                <div class="modal-footer">
+                    <!-- 続けて登録ボタン -->
+                    <a th:href="@{/user/register(clear=true)}" class="btn btn-outline-primary">
+                        <i class="bi bi-plus-circle"></i> もう1人登録
+                    </a>
+                    <!-- ホームに戻るボタン -->
+                    <a th:href="@{/home}" class="btn btn-primary">
+                        <i class="bi bi-house-door-fill"></i> ホームに戻る
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ✅ モーダル自動表示 -->
+    <script th:if="${registerComplete}">
+        document.addEventListener("DOMContentLoaded", function () {
+            let modal = new bootstrap.Modal(document.getElementById('registerCompleteModal'));
+            modal.show();
+        });
+    </script>
+
+</body>
+</html>

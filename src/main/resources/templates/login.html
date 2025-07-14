@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>業務連絡システム - ログイン</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .card {
+            border-radius: 1.5rem;
+            overflow: hidden;
+        }
+
+        .card-header-custom {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.5rem;
+            text-align: center;
+            padding: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .btn-main {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            border: none;
+            color: #fff;
+            font-weight: bold;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .btn-main:hover {
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            transform: scale(1.02);
+        }
+
+        .form-control:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
+        }
+
+        .icon-input {
+            position: relative;
+        }
+
+        .icon-input i {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4facfe;
+        }
+
+        .icon-input input {
+            padding-left: 2.5rem;
+        }
+
+        .register-link {
+            font-size: 0.9rem;
+            color: #4facfe;
+            text-decoration: none;
+        }
+
+        .register-link:hover {
+            text-decoration: underline;
+            color: #0072ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="card shadow-lg" style="max-width: 500px; margin: auto;">
+            <div class="card-header card-header-custom">
+                📣 業務連絡システム
+            </div>
+            <div class="card-body">
+
+                <!-- ✅ エラーメッセージ -->
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show text-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span th:text="${errorMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="閉じる"></button>
+                </div>
+
+                <!-- ✅ ログインフォーム -->
+                <form th:action="@{/login}" method="post" class="needs-validation" novalidate>
+                    <div class="mb-3 icon-input">
+                        <label for="orgId" class="form-label">団体ID</label>
+                        <i class="bi bi-building"></i>
+                        <input type="text" id="orgId" name="organizationId" class="form-control" placeholder="例: ORG123" required>
+                        <div class="invalid-feedback">団体IDを入力してください。</div>
+                    </div>
+                    <div class="mb-3 icon-input">
+                        <label for="userId" class="form-label">ユーザーID</label>
+                        <i class="bi bi-person"></i>
+                        <input type="text" id="userId" name="userId" class="form-control" placeholder="例: USER001" required>
+                        <div class="invalid-feedback">ユーザーIDを入力してください。</div>
+                    </div>
+                    <div class="mb-3 icon-input">
+                        <label for="password" class="form-label">パスワード</label>
+                        <i class="bi bi-lock"></i>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="8文字以上" required minlength="8">
+                        <div class="invalid-feedback">パスワードを入力してください。</div>
+                    </div>
+                    <button type="submit" class="btn btn-main w-100 py-2">ログイン</button>
+                </form>
+
+                <div class="text-center mt-3">
+                    <a th:href="@{/organization/register}" class="register-link">
+                        📝 新しい団体を登録する
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ✅ クライアントサイドバリデーション
+        (() => {
+            'use strict'
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

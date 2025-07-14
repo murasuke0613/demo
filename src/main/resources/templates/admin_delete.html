@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>管理者：削除ページ</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        }
+        .navbar {
+            backdrop-filter: blur(6px);
+            background-color: rgba(13, 110, 253, 0.85);
+        }
+        th.sortable {
+            cursor: pointer;
+        }
+        th.sortable::after {
+            content: " ⬍";
+            font-size: 0.8em;
+            color: #888;
+        }
+        .disabled-button {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ✅ ヘッダー -->
+<nav class="navbar navbar-expand-lg navbar-dark shadow">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" th:href="@{/home}">
+      <i class="bi bi-house-door-fill"></i> ホーム
+    </a>
+    <div class="ms-auto text-white">
+      <i class="bi bi-person-circle"></i> 
+      <span th:text="${loginUser.userName}">ユーザー名</span>
+      (<span th:text="${loginUser.userId}">ユーザーID</span>)
+      <a th:href="@{/logout}" class="btn btn-sm btn-outline-light ms-3">
+        <i class="bi bi-box-arrow-right"></i> ログアウト
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-5">
+    <h2 class="mb-4"><i class="bi bi-tools"></i> 管理者：削除ページ</h2>
+
+    <div th:if="${loginUser == null or loginUser.adminFlag == null or loginUser.adminFlag == false}">
+        <div class="alert alert-danger mt-3">
+            <i class="bi bi-shield-lock-fill"></i> このページは管理者のみアクセス可能です。
+        </div>
+        <a th:href="@{/home}" class="btn btn-primary mt-2">ホームに戻る</a>
+    </div>
+
+    <div th:if="${loginUser != null and loginUser.adminFlag == true}">
+        <!-- タブ -->
+        <ul class="nav nav-tabs mt-3" id="deleteTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="user-tab" data-bs-toggle="tab" data-bs-target="#user" type="button" role="tab">
+                    <i class="bi bi-person-dash-fill"></i> ユーザー削除
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="department-tab" data-bs-toggle="tab" data-bs-target="#department" type="button" role="tab">
+                    <i class="bi bi-building-dash"></i> 部署削除
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="job-tab" data-bs-toggle="tab" data-bs-target="#job" type="button" role="tab">
+                    <i class="bi bi-briefcase-dash"></i> 職種削除
+                </button>
+            </li>
+        </ul>
+
+        <!-- タブコンテンツ -->
+        <div class="tab-content" id="deleteTabsContent">
+
+            <!-- 🧑‍💼 ユーザー削除 -->
+            <div class="tab-pane fade show active" id="user" role="tabpanel">
+                <table class="table table-hover mt-3 shadow-sm rounded">
+                    <thead class="table-primary">
+                        <tr>
+                            <th class="sortable" onclick="sortTable(0, 'userTable')">ユーザー名</th>
+                            <th class="sortable" onclick="sortTable(1, 'userTable')">部署</th>
+                            <th class="sortable" onclick="sortTable(2, 'userTable')">職種</th>
+                            <th class="sortable" onclick="sortTable(3, 'userTable')">管理者</th>
+                            <th>アクション</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTable">
+                        <tr th:each="user : ${userList}">
+                            <td th:text="${user.userName}">ユーザー名</td>
+                            <td th:text="${user.department.departmentName}">部署名</td>
+                            <td th:text="${user.job.jobName}">職種名</td>
+                            <td>
+                                <span th:if="${user.adminFlag}" class="badge bg-success">✔ 管理者</span>
+                                <span th:if="${!user.adminFlag}" class="badge bg-secondary">一般</span>
+                            </td>
+                            <td>
+                                <!-- 削除禁止条件 -->
+                                <div th:if="${user.userKey != loginUser.userKey}">
+									<form th:action="@{/admin/delete/user/{key}(key=${user.userKey})}" method="post" 
+									      onsubmit="return confirm('本当にこのユーザーを削除しますか？');">
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="bi bi-trash"></i> 削除
+                                        </button>
+                                    </form>
+                                </div>
+                                <span th:if="${user.userKey == loginUser.userKey}" class="text-muted">
+                                    <i class="bi bi-lock-fill"></i> 自分
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 🏢 部署削除 -->
+            <div class="tab-pane fade" id="department" role="tabpanel">
+                <table class="table table-hover mt-3 shadow-sm rounded">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>部署名</th>
+                            <th>所属人数</th>
+                            <th>アクション</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="dept : ${departmentList}">
+                            <td th:text="${dept.departmentName}">部署名</td>
+                            <td th:text="${dept.userCount}">0</td>
+                            <td>
+                                <form th:action="@{/admin/delete/department/{id}(id=${dept.departmentId})}" method="post" 
+                                      onsubmit="return confirm('本当にこの部署を削除しますか？');">
+                                    <button type="submit" 
+                                            th:disabled="${dept.userCount > 0}" 
+                                            th:classappend="${dept.userCount > 0} ? 'disabled-button btn-secondary' : 'btn-danger'"
+                                            class="btn btn-sm">
+                                        <i class="bi bi-trash"></i> 削除
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 🛠 職種削除 -->
+            <div class="tab-pane fade" id="job" role="tabpanel">
+                <table class="table table-hover mt-3 shadow-sm rounded">
+                    <thead class="table-warning">
+                        <tr>
+                            <th>職種名</th>
+                            <th>所属人数</th>
+                            <th>アクション</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="job : ${jobList}">
+                            <td th:text="${job.jobName}">職種名</td>
+                            <td th:text="${job.userCount}">0</td>
+                            <td>
+                                <form th:action="@{/admin/delete/job/{id}(id=${job.jobId})}" method="post" 
+                                      onsubmit="return confirm('本当にこの職種を削除しますか？');">
+                                    <button type="submit" 
+                                            th:disabled="${job.userCount > 0}" 
+                                            th:classappend="${job.userCount > 0} ? 'disabled-button btn-secondary' : 'btn-danger'"
+                                            class="btn btn-sm">
+                                        <i class="bi bi-trash"></i> 削除
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function sortTable(columnIndex, tableId) {
+        const table = document.getElementById(tableId);
+        const rows = Array.from(table.querySelectorAll("tr"));
+        const sortedRows = rows.sort((a, b) => {
+            const aText = a.children[columnIndex].innerText;
+            const bText = b.children[columnIndex].innerText;
+            return aText.localeCompare(bText, "ja");
+        });
+        rows.forEach(row => table.appendChild(row));
+    }
+</script>
+</body>
+</html>

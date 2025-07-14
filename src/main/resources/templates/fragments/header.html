@@ -1,0 +1,25 @@
+<!-- templates/fragments/header.html -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow" th:fragment="header">
+  <div class="container-fluid">
+    <!-- 🟢 ホームボタンは初回登録時は表示しない -->
+    <a th:if="${!isInitialRegistration}" class="navbar-brand fw-bold" th:href="@{/home}">
+      <i class="bi bi-house-door-fill"></i> ホーム
+    </a>
+
+    <!-- 🔴 ホーム非表示の場合はロゴや代替タイトルを表示してもOK -->
+    <span th:if="${isInitialRegistration}" class="navbar-brand fw-bold">
+      <i class="bi bi-building"></i> 初回登録
+    </span>
+
+    <div class="ms-auto d-flex align-items-center">
+      <span class="text-white me-3">
+        <i class="bi bi-person-circle"></i>
+        <strong th:if="${loginUser != null}" th:text="${loginUser.userName}">ユーザー名</strong>
+        <strong th:if="${loginUser == null}">ゲスト</strong>
+      </span>
+      <a th:if="${loginUser != null}" th:href="@{/logout}" class="btn btn-outline-light btn-sm">
+        <i class="bi bi-box-arrow-right"></i> ログアウト
+      </a>
+    </div>
+  </div>
+</nav>

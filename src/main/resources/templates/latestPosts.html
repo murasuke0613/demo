@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>各部署の最新投稿</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(to right, #f8f9fa, #e9ecef);
+    }
+    .navbar {
+      backdrop-filter: blur(6px);
+      background-color: rgba(13, 110, 253, 0.85);
+    }
+    .card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+    }
+    .no-post {
+      color: #adb5bd;
+      font-style: italic;
+    }
+    /* ✅ 改行幅を調整 */
+    .card-text p {
+      margin-top: 0.2rem;
+      margin-bottom: 0.2rem;
+    }
+    .card-text {
+      line-height: 1.4;
+    }
+	.user-info {
+	  color: #f8f9fa; /* ← 白文字 */
+	}
+  </style>
+
+</head>
+<body>
+
+	<!-- ===== ナビバー ===== -->
+	<nav class="navbar navbar-expand-lg navbar-dark shadow">
+	  <div class="container-fluid">
+	    <a class="navbar-brand fw-bold" th:href="@{/home}">
+	      <i class="bi bi-house-door-fill"></i> Home
+	    </a>
+	    <div class="ms-auto user-info d-flex align-items-center">
+	      <span><i class="bi bi-person-circle"></i> 
+	        <strong th:text="${loginUser.userName}">ユーザー名</strong>
+	      </span>
+	      <span class="ms-3">ID: <span th:text="${loginUser.userId}">12345</span></span>
+	      <a th:href="@{/logout}" class="btn btn-sm btn-outline-light ms-3">
+	        <i class="bi bi-box-arrow-right"></i> ログアウト
+	      </a>
+	      <!-- ✅ 投稿ボタンは右側に配置 -->
+	      <button type="button" class="btn btn-light btn-sm ms-3" data-bs-toggle="modal" data-bs-target="#postModal">
+	        <i class="bi bi-pencil-square"></i> 投稿する
+	      </button>
+	    </div>
+	  </div>
+	</nav>
+
+<!-- ===== メインコンテンツ ===== -->
+<div class="container py-4" id="latestPostsContainer">
+  <h2 class="mb-4 text-center">📋 各部署の最新投稿</h2>
+
+  <div class="row row-cols-1 row-cols-md-2 g-4">
+    <div th:each="dept : ${departmentDataList}"
+         th:with="post=${latestPostPerDept[dept.departmentId]}"
+         class="col">
+      <a th:href="@{/departmentHistory/{id}(id=${dept.departmentId})}" class="text-decoration-none text-dark">
+        <div class="card h-100 shadow-sm border-0 rounded-4">
+          <div class="card-header bg-primary text-white">
+            <i class="bi bi-building"></i>
+            <span th:text="${dept.departmentName}">部署名</span>
+
+            <!-- 🆕 バッジ -->
+            <span class="badge bg-warning text-dark ms-2"
+                  th:if="${post != null and post.writingTime != null and T(java.time.temporal.ChronoUnit).DAYS.between(post.writingTime.toLocalDateTime().toLocalDate(), T(java.time.LocalDate).now()) < 7}"
+                  th:switch="${T(java.time.temporal.ChronoUnit).DAYS.between(post.writingTime.toLocalDateTime().toLocalDate(), T(java.time.LocalDate).now())}">
+              <span th:case="0">New</span>
+              <span th:case="1">1日前</span>
+              <span th:case="2">2日前</span>
+              <span th:case="*">今週</span>
+            </span>
+          </div>
+          <div class="card-body">
+            <!-- ✅ 投稿が7日以内なら表示 -->
+            <div th:if="${post != null and post.writingTime != null and T(java.time.temporal.ChronoUnit).DAYS.between(post.writingTime.toLocalDateTime().toLocalDate(), T(java.time.LocalDate).now()) < 7}">
+              <h5 class="card-title mb-2">
+                <i class="bi bi-person-circle"></i>
+                <span th:text="${post.userNameStamp}">投稿者</span>
+                <span class="ms-2">
+                  <i class="bi bi-briefcase-fill"></i>
+                  <span th:text="${post.jobNameStamp}">職種名</span>
+                </span>
+              </h5>
+              <div class="card-text" th:utext="${post.message}">投稿内容</div>
+
+              <div th:if="${post.pdfMovie != null}">
+                <a th:href="@{/download/{id}(id=${post.writingId})}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm mt-2">
+                  <i class="bi bi-file-earmark-pdf"></i> 添付PDFを見る
+                </a>
+              </div>
+
+              <div class="text-end text-muted small">
+                <i class="bi bi-clock"></i>
+                <span th:text="${#dates.format(post.writingTime, 'yyyy/MM/dd HH:mm')}">投稿日時</span>
+              </div>
+            </div>
+
+            <!-- ❌ 7日以上前 or 投稿なし -->
+            <div th:if="${post == null or post.writingTime == null or T(java.time.temporal.ChronoUnit).DAYS.between(post.writingTime.toLocalDateTime().toLocalDate(), T(java.time.LocalDate).now()) >= 7}"
+                 class="no-post text-center text-muted">
+              <i class="bi bi-info-circle"></i> 最新の投稿はありません
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 投稿モーダル ===== -->
+<div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="postModalLabel"><i class="bi bi-pencil-square"></i> 新規投稿</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form th:action="@{/postWriting}" method="post" enctype="multipart/form-data" onsubmit="copyQuillContent()">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="editor" class="form-label">内容</label>
+            <div id="editor" class="quill-editor"></div>
+            <input type="hidden" name="message" id="message">
+          </div>
+          <div class="mb-3">
+            <label for="pin" class="form-label">PINコード（任意）</label>
+            <input type="text" class="form-control" id="pin" name="pin" placeholder="PINコードを入力">
+          </div>
+          <div class="mb-3">
+            <label for="pdfFile" class="form-label">PDFファイル（任意）</label>
+            <input class="form-control" type="file" id="pdfFile" name="pdfFile" accept=".pdf">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          <button type="submit" class="btn btn-primary">投稿する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+  // Quillエディタ初期化
+  var quill = new Quill('#editor', {
+    theme: 'snow'
+  });
+
+  // フォーム送信時に内容コピー
+  function copyQuillContent() {
+    document.querySelector('#message').value = quill.root.innerHTML;
+  }
+</script>
+</body>
+</html>
