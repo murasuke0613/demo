@@ -20,7 +20,7 @@
 - **フロントエンド**: Thymeleaf, Bootstrap 5, Quill.js
 - **データベース**: PostgreSQL
 - **ビルドツール**: Maven
-- **その他**: Spring Security
+- **その他**: ChatGPT
 
 ---
 
