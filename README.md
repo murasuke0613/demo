@@ -35,6 +35,13 @@ Spring Boot と Thymeleaf によりサーバーサイドを構築し、フロン
 ## デモURL
 https://javaportfolio.onrender.com
 
+## スクリーンショット
+![ログイン画面](images/login.png)
+![新規団体登録](image/organizationRegister.png)
+![!部署・職種登録](image/DepartmentRegister.png)
+![ユーザー登録](image/UserRegister.png)
+![Home画面](image/Home.png)
+
 ## 💻 環境構築
  
 1️⃣ クローン
