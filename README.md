@@ -1,9 +1,10 @@
-# 📝 業務連絡アプリ（React連携版）
+# 📝 業務連絡アプリ
 
 ## 📖 概要
 このシステムは、部署ごとに最新情報を効率的に共有・管理できる社内業務連絡アプリです。
 Spring Boot と Thymeleaf によりサーバーサイドを構築し、フロントエンドには React・Bootstrap5 を用いることで、シンプルかつレスポンシブなUIを実現しています。
 開発には **生成AI (ChatGPT)** を活用し、コード生成・UI改良・API設計を行っています。
+過去にExcel×VBAで作成した社内情報共有掲示板をWebアプリとしてリメイクしました。
 
 ---
 
@@ -37,10 +38,14 @@ https://javaportfolio.onrender.com
 
 ## スクリーンショット
 ![ログイン画面](images/login.png)
-![新規団体登録](image/organizationRegister.png)
-![!部署・職種登録](image/DepartmentRegister.png)
-![ユーザー登録](image/UserRegister.png)
-![Home画面](image/Home.png)
+![新規団体登録](images/organizationRegister.png)
+![部署・職種登録](images/DepartmentRegister.png)
+![ユーザー登録](images/UserRegister.png)
+![Home画面](images/Home.png)
+![投稿内容表示画面](images/WritingBordView.png)
+![投稿画面](images/Post.png)
+![投稿履歴画面](images/PostHistory.png)
+![ユーザー削除画面](images/DeleteUser.png)
 
 ## 💻 環境構築
  
